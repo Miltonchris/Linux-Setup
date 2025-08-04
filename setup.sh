@@ -17,6 +17,7 @@ sudo apt install -y \
     vim \
     htop \
     polybar \
+    fzf \
     unzip
 
 echo "=== Installing Oh My Zsh ==="
@@ -27,8 +28,15 @@ else
     echo "Oh My Zsh already installed."
 fi
 
-echo "=== Setting Zsh as default shell ==="
-chsh -s $(which zsh)
+
+echo "=== Setting zsh as default shell ==="
+if [ "$SHELL" != "$(which zsh)" ]; then
+    chsh -s "$(which zsh)"
+    echo "Default shell changed to zsh."
+else
+    echo "zsh is already the default shell."
+fi
+
 
 echo "=== Installing zsh plugins ==="
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
@@ -55,6 +63,27 @@ fi
 
 if ! grep -q "zsh-autosuggestions" ~/.zshrc; then
     sed -i 's|^plugins=(|plugins=(zsh-autosuggestions zsh-syntax-highlighting |' ~/.zshrc
+fi
+
+if ! command -v lazygit &> /dev/null; then
+    echo "Lazygit already installed."
+else
+    echo "Installing Lazygit..."
+
+    # Get latest version
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": *"v\K[^"]*')
+
+    # Download and extract
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+
+    # Install
+    sudo install lazygit -D -t /usr/local/bin/
+
+    # Cleanup
+    rm lazygit.tar.gz lazygit
+
+    echo "Lazygit v${LAZYGIT_VERSION} installed and cleaned up."
 fi
 
 echo "✅ Setup complete. Please restart your terminal or run: exec zsh"
